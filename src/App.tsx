@@ -8,11 +8,27 @@ interface IItem {
 }
 
 function App() {
-  const totalValueLimit = 100;
+  const [totalValueLimit, setTotalValueLimit] = React.useState(100);
 
   const [items, setItems] = React.useState<IItem[]>([]);
   const [currentItemLabel, setCurrentItemLabel] = React.useState('');
 
+  const updateItemsOnTotalValueChange = () => {
+    const oldTotal = items.reduce((acc, item) => acc + item.value, 0);
+    
+    if(isNaN(totalValueLimit)){
+      setTotalValueLimit(oldTotal);
+      return;
+    }
+
+    const newItems = items.map(item => {
+      const percentageFromTotal = item.value / oldTotal;
+      return {...item, value: percentageFromTotal * totalValueLimit};
+    });
+
+    setItems(newItems);
+  }
+  
   const getNewItemsValue = (newItemsCount: number, newItem: IItem) => {
     const newMedianValue = totalValueLimit/newItemsCount;
     const oldMedianValue = totalValueLimit/(newItemsCount - 1);
@@ -61,16 +77,19 @@ function App() {
     setItems(newItems);
   }
 
-  console.log(items)
+  console.log({items, totalValueLimit})
   return (
     <div className="App">
       <input value={currentItemLabel} onChange={(e) => setCurrentItemLabel(e.currentTarget.value)} />
       <button onClick={handleInsertItem}>insert new item</button>
 
+      <span>splittedValue</span>
+      <input value={totalValueLimit} onBlur={updateItemsOnTotalValueChange} onChange={e => setTotalValueLimit(Number(e.currentTarget.value))}></input>
+
       <div>
         <ul>
           {items.map(item => (<li key={item.id}><span>{item.label}</span>
-          <input type="range" onChange={e => onUpdateItem(item.id,e.currentTarget.value)} value={item.value}/><span>{item.value.toFixed(2)}</span></li>))}
+          <input type="range" min={0} max={totalValueLimit} onChange={e => onUpdateItem(item.id,e.currentTarget.value)} value={item.value}/><span>{item.value.toFixed(2)}</span></li>))}
         </ul>
       </div>
     </div>
